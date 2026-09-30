@@ -26,3 +26,14 @@ git version 2.50.1 (Apple Git-155)
 ```
 
 macOS arm64에서 실행했습니다. 추가 패키지는 설치하지 않습니다.
+
+## API 연결 확인
+
+```bash
+GET https://llm.pcl.kr/v1/models
+HTTP 200
+requested_model=pickle-general
+available=True
+```
+
+지정 모델을 반환하는 models 엔드포인트에 인증한 결과입니다. 생성 요청은 /chat/completions로 전송합니다.
