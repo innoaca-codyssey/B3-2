@@ -82,3 +82,36 @@ feat: Git 변경 감지, API 클라이언트, 초안 생성 모듈 추가
 ```
 
 이번에 작성한 소스 변경에서 생성한 결과입니다. 200행 제한으로 일부 파일만 전송되었으므로 메시지는 해당 입력에서 확인된 모듈을 요약합니다. 입력이 생략되면 전체 변경을 대표하는지 추가로 검토해야 합니다.
+
+## 실제 PR 초안 생성
+
+```bash
+$ python3 /Users/yejun/GitHub/Codyssey/B3/B3-2/submission/main.py pr --safe-mode --max-tokens 600 --context '빈 목록의 평균 계산에서 0으로 나누는 오류를 방지합니다'
+[INFO] Git status: 1개 파일 변경
+[INFO] 전송 파일: 1, 제외: 0, 마스킹: 0, 생략 행: 0
+[INFO] model=pickle-general temperature=0.2 max_tokens=600
+[INFO] API 요청 횟수: 1
+[INFO] tokens: prompt=322 completion=129
+[DONE] 형식 검증 완료
+--- PR Title ---
+fix: 빈 리스트 평균 계산 시 0으로 나누기 오류 방지
+
+--- PR Body ---
+
+## Why
+- 빈 리스트의 합을 0으로 나누면 ZeroDivisionError가 발생함
+
+## What
+- average 함수에 빈 리스트 체크 로직 추가
+- 빈 리스트일 경우 0을 반환하도록 수정
+
+## How to Test
+- python -c "from average import average; print(average([]))"
+- python -c "from average import average; print(average([1, 2, 3]))"
+```
+
+빈 목록에서 평균을 계산할 때 0으로 나누던 예제 변경을 입력으로 사용했습니다. PR 제목과 Why/What/How to Test에 각각 불릿이 있는 구조를 한 번의 호출로 생성했습니다.
+
+## 제안한 검사 실행
+
+```bash
