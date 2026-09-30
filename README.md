@@ -192,7 +192,7 @@ OFF에서는 .env까지 포함해 4개 파일을 보내고 치환하지 않았�
 ## 변경 없음과 키 누락
 
 ```bash
-$ python3 main.py commit
+$ set -a; source ../.env; set +a; python3 main.py commit
 [INFO] 변경 사항이 없습니다
 [INFO] API 요청 횟수: 0
 exit=0
