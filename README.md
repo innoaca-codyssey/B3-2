@@ -133,3 +133,18 @@ exit=0
 ```
 
 이 환경에서는 python 명령이 없어 생성된 검사 명령을 python3로 수정했습니다. 같은 예제에서 빈 목록은 0, 세 원소의 평균은 2.0을 반환했습니다. 초안의 명령은 실행 환경과 대조해 검토해야 합니다.
+
+## 최대 출력 토큰 비교
+
+```bash
+$ python3 /Users/yejun/GitHub/Codyssey/B3/B3-2/submission/main.py pr --safe-mode --max-tokens 64 --context '빈 목록의 평균 계산에서 0으로 나누는 오류를 방지합니다'
+[INFO] Git status: 1개 파일 변경
+[INFO] 전송 파일: 1, 제외: 0, 마스킹: 0, 생략 행: 0
+[INFO] model=pickle-general temperature=0.2 max_tokens=64
+[ERROR] 형식 검증 실패: 최대 토큰 수에 도달해 출력이 잘렸습니다. --max-tokens와 입력 변경량을 확인하세요
+[힌트] 저장소 루트, API 환경변수, URL/모델, 입력 옵션을 확인하세요
+[INFO] API 요청 횟수: 2
+exit=1
+```
+
+같은 diff와 배경에서 max_tokens만 600에서 64로 바꿨습니다. 600에서는 129토큰의 PR을 생성했고, 64에서는 출력이 잘려 최대 두 번 재생성 후 오류로 종료했습니다. 토큰 상한은 형식을 완성할 공간에도 영향을 줍니다.
