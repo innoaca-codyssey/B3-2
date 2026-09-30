@@ -115,3 +115,21 @@ fix: 빈 리스트 평균 계산 시 0으로 나누기 오류 방지
 ## 제안한 검사 실행
 
 ```bash
+$ cat average.py
+def average(values):
+    if not values:
+        return 0
+    return sum(values) / len(values)
+exit=0
+$ zsh -c 'python -c "from average import average; print(average([]))"'
+zsh:1: command not found: python
+exit=127
+$ python3 -c 'from average import average; print(average([]))'
+0
+exit=0
+$ python3 -c 'from average import average; print(average([1, 2, 3]))'
+2.0
+exit=0
+```
+
+이 환경에서는 python 명령이 없어 생성된 검사 명령을 python3로 수정했습니다. 같은 예제에서 빈 목록은 0, 세 원소의 평균은 2.0을 반환했습니다. 초안의 명령은 실행 환경과 대조해 검토해야 합니다.
