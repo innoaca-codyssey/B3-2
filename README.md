@@ -37,3 +37,48 @@ available=True
 ```
 
 지정 모델을 반환하는 models 엔드포인트에 인증한 결과입니다. 생성 요청은 /chat/completions로 전송합니다.
+
+## 변경 수집과 오류 처리 검증
+
+```bash
+$ python3 -W error::ResourceWarning -m unittest discover -s tests -v
+test_http_failure_invalid_response_and_redirect (testdrafts.FormatTests.test_http_failure_invalid_response_and_redirect) ... ok
+test_invalid_json_missing_section_and_empty_bullet (testdrafts.FormatTests.test_invalid_json_missing_section_and_empty_bullet) ... ok
+test_regeneration_once_and_no_third_call (testdrafts.FormatTests.test_regeneration_once_and_no_third_call) ... ok
+test_title_cap_and_fenced_json (testdrafts.FormatTests.test_title_cap_and_fenced_json) ... ok
+test_clean_missing_key_and_root_requirement (testdrafts.GitTests.test_clean_missing_key_and_root_requirement) ... ok
+test_cli_argument_errors_no_traceback (testdrafts.GitTests.test_cli_argument_errors_no_traceback) ... ok
+test_cli_parameters_and_pr_structure (testdrafts.GitTests.test_cli_parameters_and_pr_structure) ... ok
+test_rename_and_unicode_path (testdrafts.GitTests.test_rename_and_unicode_path) ... ok
+test_safe_mode_excludes_before_reading_and_limits_lines (testdrafts.GitTests.test_safe_mode_excludes_before_reading_and_limits_lines) ... ok
+test_safe_mode_file_limit (testdrafts.GitTests.test_safe_mode_file_limit) ... ok
+test_staged_unstaged_and_untracked_content (testdrafts.GitTests.test_staged_unstaged_and_untracked_content) ... ok
+test_tokens_email_assignments_and_partial_private_key (testdrafts.PrivacyTests.test_tokens_email_assignments_and_partial_private_key) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 4.975s
+
+OK
+```
+
+단계별 diff, 비추적 파일, 이름 변경과 Unicode 경로를 검사했습니다. 안전 모드의 읽기 전 제외와 전송 제한, 제목 길이, 필수 PR 불릿, HTTP 오류와 재생성 최대 두 번을 확인했습니다.
+
+## 실제 커밋 메시지 생성
+
+```bash
+$ set -a; source ../.env; set +a; python3 main.py commit --safe-mode
+[INFO] Git status: 6개 파일 변경
+[INFO] 전송 파일: 3, 제외: 0, 마스킹: 6, 생략 행: 364
+[INFO] model=pickle-general temperature=0.2 max_tokens=1200
+[INFO] API 요청 횟수: 1
+[INFO] tokens: prompt=2516 completion=96
+[DONE] 형식 검증 완료
+--- Commit Message ---
+feat: Git 변경 감지, API 클라이언트, 초안 생성 모듈 추가
+
+- changes.py: Git 저장소의 상태 및 diff를 수집하는 GitChanges 클래스 구현
+- client.py: LLM API와 통신하는 ChatClient 및 응답 파싱 클래스 구현
+- drafts.py: 초안 데이터 모델 및 JSON 파싱/렌더링 유틸리티 구현
+```
+
+이번에 작성한 소스 변경에서 생성한 결과입니다. 200행 제한으로 일부 파일만 전송되었으므로 메시지는 해당 입력에서 확인된 모듈을 요약합니다. 입력이 생략되면 전체 변경을 대표하는지 추가로 검토해야 합니다.
