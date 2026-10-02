@@ -347,3 +347,40 @@ exit=0
 ```
 
 동일한 브랜치 변경으로 커밋 메시지를 한 번 생성했습니다. PR 브랜치의 기존 커밋 e80c238은 보존하고, 생성된 메시지는 검토 후보로 둡니다. 출력의 검사 11개는 기존 회귀 8개와 새 가입/검색 검사 3개를 합친 수입니다.
+
+### 컨벤션 적용 전 PR 초안
+
+```text
+$ python3 B3-2/main.py pr --diff-base 556020d --safe-mode --max-files 20 --max-lines 1000 --temperature 0.2 --max-tokens 1600
+[INFO] Git comparison: 13개 파일 변경
+[INFO] 전송 파일: 13, 제외: 0, 마스킹: 5, 생략 행: 0
+[INFO] model=pickle-general temperature=0.2 max_tokens=1600
+[INFO] API 요청 횟수: 1
+[INFO] tokens: prompt=7364 completion=296
+[DONE] 형식 검증 완료
+--- PR Title ---
+feat: 회원가입, bcrypt 해싱, 할 일 검색 필터 구현
+
+--- PR Body ---
+
+## Why
+- 기존 PBKDF2 해싱을 bcrypt cost 12로 업그레이드하여 신규 회원 비밀번호 보안을 강화하기 위해
+- 테스트 계정 의존성을 줄이고 직접 가입할 수 있는 회원가입 기능과 CSRF 보호를 추가하기 위해
+- 회원의 할 일을 제목, 완료 여부, 프로젝트로 검색하고 필터링할 수 있도록 기능을 확장하기 위해
+
+## What
+- auth/password.py: 신규 비밀번호는 bcrypt(cost 12)로 해싱하고, 기존 PBKDF2 해시는 로그인 시 호환 검증
+- services/auth.py: 신규 회원가입 로직 추가 (ID 정규화, 중복 검사, 비밀번호 길이/바이트 제한, CSRF 검증)
+- repositories/auth.py: 회원가입 시 중복 ID 발생 시 IntegrityError 처리 및 롤백
+- repositories/task.py, services/task.py, routers/task.py: 할 일 목록 조회 시 제목, 완료 상태, 프로젝트 ID 필터링 지원
+- templates/signup.html, base.html: 회원가입 폼 UI 및 네비게이션 링크 추가
+- tests/testweb.py: 회원가입, 해싱, 검색 필터링, 권한 격리 관련 테스트 11개 추가
+
+## How to Test
+- .venv/bin/python -m unittest discover -s tests -v
+
+exit=0
+
+```
+
+형식은 통과했지만 내용 검토에서는 수정할 부분이 있었습니다. 가입 CSRF 검증은 services/auth.py가 아닌 routers/auth.py에 있고, tests/testweb.py는 11개를 새로 추가한 것이 아니라 기존 8개에 3개를 더했습니다. bcrypt 도입만으로 기존 PBKDF2보다 보안이 우월해졌다는 결론도 내리지 않습니다.
