@@ -316,3 +316,34 @@ OK
 이전에 완성한 B6-3에서 feature/bonus-auth-search 브랜치로 bcrypt 회원가입과 회원별 검색을 구현했습니다. 실제 HTTP 검사 11개를 통과한 커밋 e80c238을 push하고 [PR 1](https://github.com/innoaca-codyssey/B6-3/pull/1)을 작성했습니다. 현재 PR은 직접 작성한 제목/본문이며 모델의 커밋 메시지와 PR 초안 생성, 컨벤션 적용 전후 비교 및 초안에서 최종 PR까지의 5~10줄 비교는 미수행입니다. 따라서 실제 PR 링크만으로 B3-2의 해당 보너스를 전체 완료로 표시하지 않습니다.
 
 B6-3 제출 저장소의 브랜치에서 --diff-base main으로 커밋된 변경을 수집할 수 있습니다. 커밋 메시지/PR 초안은 검토용 출력이며 도구가 GitHub에 자동 반영하지 않습니다.
+
+## B6-3 변경의 생성 검증
+
+2026-10-03, 기존 B6-3 PR 1의 main 556020d와 feature/bonus-auth-search e80c238 사이에서 가입/검색 변경 13개 파일을 수집합니다. --safe-mode --max-files 20 --max-lines 1000, temperature 0.2, max_tokens 1600으로 실행하며 같은 입력으로 컨벤션 전후를 비교합니다. PR 제목/본문 반영은 검토 후 진행합니다.
+
+### 커밋 메시지 생성
+
+```text
+$ python3 B3-2/main.py commit --diff-base 556020d --safe-mode --max-files 20 --max-lines 1000 --temperature 0.2 --max-tokens 1600 --convention convention-example.json
+[INFO] Git comparison: 13개 파일 변경
+[INFO] 전송 파일: 13, 제외: 0, 마스킹: 5, 생략 행: 0
+[INFO] model=pickle-general temperature=0.2 max_tokens=1600
+[INFO] API 요청 횟수: 1
+[INFO] tokens: prompt=7458 completion=182
+[DONE] 형식 검증 완료
+--- Commit Message ---
+feat: 신규 회원가입, bcrypt 해싱, 할 일 검색 기능 추가
+
+- 신규 회원가입 API(/signup) 및 템플릿 추가, CSRF 보호 및 중복/길이 검증 적용
+- 비밀번호 해싱 알고리즘을 bcrypt(cost 12)로 변경, 기존 PBKDF2 해시도 로그인 시 검증 유지
+- 비밀번호 유효성 검사: 8자 이상, UTF-8 72바이트 이내 제한
+- 할 일 목록 페이지에 제목, 완료 여부, 프로젝트 ID 기반 검색 및 필터 기능 추가
+- 검색 시 회원 ID를 적용하여 타인의 할 일 조회 차단
+- bcrypt 5.0.0 패키지 의존성 추가 및 README 문서 업데이트
+- 신규 회원가입, 검색 필터, 기존 비밀번호 검증 관련 테스트 11개 통과
+
+exit=0
+
+```
+
+동일한 브랜치 변경으로 커밋 메시지를 한 번 생성했습니다. PR 브랜치의 기존 커밋 e80c238은 보존하고, 생성된 메시지는 검토 후보로 둡니다. 출력의 검사 11개는 기존 회귀 8개와 새 가입/검색 검사 3개를 합친 수입니다.
