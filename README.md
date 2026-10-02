@@ -279,7 +279,7 @@ commit/pr에 --convention JSON 경로를 추가했습니다. convention-example.
 python3 main.py pr --diff-base main --safe-mode --convention convention-example.json
 ```
 
-실제 컨벤션 적용 전후 생성과 커밋/PR 초안의 모델 호출은 아직 수행하지 않았습니다.
+2026-10-03에 실제 커밋/PR 초안 생성과 컨벤션 적용 전후 비교를 수행했습니다. 아래 실행 결과에 연결합니다.
 
 ## 컨벤션과 브랜치 비교 검증
 
@@ -313,7 +313,7 @@ OK
 
 ## 실제 저장소 적용
 
-이전에 완성한 B6-3에서 feature/bonus-auth-search 브랜치로 bcrypt 회원가입과 회원별 검색을 구현했습니다. 실제 HTTP 검사 11개를 통과한 커밋 e80c238을 push하고 [PR 1](https://github.com/innoaca-codyssey/B6-3/pull/1)을 작성했습니다. 현재 PR은 직접 작성한 제목/본문이며 모델의 커밋 메시지와 PR 초안 생성, 컨벤션 적용 전후 비교 및 초안에서 최종 PR까지의 5~10줄 비교는 미수행입니다. 따라서 실제 PR 링크만으로 B3-2의 해당 보너스를 전체 완료로 표시하지 않습니다.
+이전에 완성한 B6-3에서 feature/bonus-auth-search 브랜치로 bcrypt 회원가입과 회원별 검색을 구현했습니다. 실제 HTTP 검사 11개를 통과한 커밋 e80c238을 push하고 [PR 1](https://github.com/innoaca-codyssey/B6-3/pull/1)을 작성했습니다. PR은 2026-10-02 직접 작성한 제목/본문입니다. 2026-10-03 모델 초안과 컨벤션 전후 비교를 생성했습니다. 검토한 제목/본문의 실제 PR 반영은 아직 수행하지 않았으므로 해당 보너스의 적용 단계는 남아 있습니다.
 
 B6-3 제출 저장소의 브랜치에서 --diff-base main으로 커밋된 변경을 수집할 수 있습니다. 커밋 메시지/PR 초안은 검토용 출력이며 도구가 GitHub에 자동 반영하지 않습니다.
 
@@ -384,3 +384,50 @@ exit=0
 ```
 
 형식은 통과했지만 내용 검토에서는 수정할 부분이 있었습니다. 가입 CSRF 검증은 services/auth.py가 아닌 routers/auth.py에 있고, tests/testweb.py는 11개를 새로 추가한 것이 아니라 기존 8개에 3개를 더했습니다. bcrypt 도입만으로 기존 PBKDF2보다 보안이 우월해졌다는 결론도 내리지 않습니다.
+
+### 컨벤션 적용 후 PR 초안
+
+```text
+$ python3 B3-2/main.py pr --diff-base 556020d --safe-mode --max-files 20 --max-lines 1000 --temperature 0.2 --max-tokens 1600 --convention convention-example.json
+[INFO] Git comparison: 13개 파일 변경
+[INFO] 전송 파일: 13, 제외: 0, 마스킹: 5, 생략 행: 0
+[INFO] model=pickle-general temperature=0.2 max_tokens=1600
+[INFO] API 요청 횟수: 1
+[INFO] tokens: prompt=7463 completion=389
+[DONE] 형식 검증 완료
+--- PR Title ---
+[B6-3] 신규 회원가입, bcrypt 해싱, 할 일 검색 기능 추가
+
+--- PR Body ---
+
+## Why
+- 기존 테스트 계정만 있던 앱에 직접 회원가입 기능을 추가하여 실제 사용자 흐름을 지원하기 위함
+- 신규 비밀번호 저장에 더 안전한 bcrypt를 적용하고, 기존 PBKDF2 해시도 유지하여 마이그레이션 없이 로그인 가능하게 함
+- 회원의 할 일을 제목, 완료 상태, 프로젝트로 검색하여 관리 편의성을 높이기 위함
+
+## What
+- 신규 회원가입 API(/signup) 및 UI 추가: CSRF 검증, ID 중복 검사, 8자 이상/UTF-8 72바이트 이내 비밀번호 제한
+- 비밀번호 해싱 알고리즘 변경: 신규 가입은 bcrypt(cost 12) 사용, 기존 로그인 시 PBKDF2와 bcrypt 모두 지원
+- 할 일 목록 검색 기능 추가: 제목(부분 일치), 완료 여부, 프로젝트 ID로 필터링하며 회원 ID로 데이터 격리 유지
+- 요청 검증 강화: 프로젝트 ID 형식 검사, 검색어 길이 제한, 유효하지 않은 파라미터에 대한 400/404 에러 반환
+
+## How to Test
+- uv run python -m unittest discover -s tests -v 실행하여 11개 테스트 통과 확인
+- POST /signup에 잘못된 CSRF 토큰, 중복 ID, 짧은 비밀번호, UTF-8 초과 비밀번호 전송 시 에러 반환 확인
+- 신규 가입 시 bcrypt 해시 생성 및 로그인 성공 확인
+- 기존 PBKDF2 해시 계정 로그인 성공 확인
+- GET /app/tasks에 q, completed, project_id 파라미터로 검색 시 본인 데이터만 반환되고 타인 데이터는 노출되지 않음 확인
+
+exit=0
+
+```
+
+| 조건 | 적용 전 | 적용 후 |
+|---|---|---|
+| 제목 접두어 | feat: | [B6-3] |
+| PR 제목 제한 | 80자 | 64자 |
+| 실제 제목 길이 | 35자 | 39자 |
+| 섹션 | Why/What/How to Test | Why/What/How to Test |
+| API 요청 수 | 1 | 1 |
+
+두 실행은 같은 13개 파일/마스킹 5건/생략 0행, temperature 0.2, max_tokens 1600을 사용했습니다. PR 본문의 표현과 항목 수는 생성 변동도 포함하므로 모든 차이를 컨벤션 효과로 단정하지 않습니다. 적용 후에도 bcrypt의 보안 우열 표현과 uv run 명령은 그대로 채택하지 않습니다. 이 프로젝트의 실행 명령은 .venv/bin/python이며, 기존 PBKDF2는 해시 검증 함수 검사와 실제 로그인 코드의 연결을 구분해서 확인합니다.
