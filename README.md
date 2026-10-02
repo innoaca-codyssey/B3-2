@@ -431,3 +431,41 @@ exit=0
 | API 요청 수 | 1 | 1 |
 
 두 실행은 같은 13개 파일/마스킹 5건/생략 0행, temperature 0.2, max_tokens 1600을 사용했습니다. PR 본문의 표현과 항목 수는 생성 변동도 포함하므로 모든 차이를 컨벤션 효과로 단정하지 않습니다. 적용 후에도 bcrypt의 보안 우열 표현과 uv run 명령은 그대로 채택하지 않습니다. 이 프로젝트의 실행 명령은 .venv/bin/python이며, 기존 PBKDF2는 해시 검증 함수 검사와 실제 로그인 코드의 연결을 구분해서 확인합니다.
+
+### PR 제목/본문 검토안
+
+제안 제목은 `[B6-3] 회원가입과 회원별 할 일 검색`입니다. 기존 PR 1의 제목/본문 반영은 사용자 검토 대기입니다. 생성 초안에서 다음 8개를 고쳤습니다. 실제 PR에 이미 반영했다는 의미는 아닙니다.
+
+1. 제목은 구현 이름의 나열에서 회원가입과 회원별 검색이라는 사용자 동작으로 줄였습니다.
+2. Why의 “더 안전한 bcrypt” 표현은 두 해싱 방식의 보안 우열을 검증하지 않았으므로 뺐습니다.
+3. CSRF 처리 위치는 적용 전 초안의 services/auth.py에서 실제 코드의 routers/auth.py로 바로잡았습니다.
+4. “테스트 11개 추가”는 기존 8개에 새 3개를 더한 합계 11개로 고쳤습니다.
+5. 적용 후의 uv run 명령은 실제로 통과한 .venv/bin/python 명령으로 바꿨습니다.
+6. 기존 PBKDF2 계정의 HTTP 로그인 성공 제안은 실제 검증 함수의 호환 확인과 구분했습니다.
+7. 검색 설명에 %/_ 문자 검색과 회원 ID 조건 및 타인 프로젝트 404를 명시했습니다.
+8. 시행 전 제안과 실제로 실행한 11개 검사를 구분하고 검증 환경을 임시 SQLite/로컬 HTTP로 적었습니다.
+
+### PR 변경 재검증
+
+```text
+$ .venv/bin/python -W error::ResourceWarning -m unittest discover -s tests -v
+test_anonymous_and_wrong_password (testweb.WebTests.test_anonymous_and_wrong_password) ... ok
+test_complete_workflow_relations_and_idempotent_state (testweb.WebTests.test_complete_workflow_relations_and_idempotent_state) ... ok
+test_csrf_validation_missing_and_escaped_content (testweb.WebTests.test_csrf_validation_missing_and_escaped_content) ... ok
+test_expired_session_and_project_cascade (testweb.WebTests.test_expired_session_and_project_cascade) ... ok
+test_login_ui_cookie_and_hashed_storage (testweb.WebTests.test_login_ui_cookie_and_hashed_storage) ... ok
+test_logout_revokes_replayed_cookie_and_session_rotation (testweb.WebTests.test_logout_revokes_replayed_cookie_and_session_rotation) ... ok
+test_other_member_cannot_read_or_change (testweb.WebTests.test_other_member_cannot_read_or_change) ... ok
+test_relations_persist_after_restart (testweb.WebTests.test_relations_persist_after_restart) ... ok
+test_search_filters_and_member_isolation (testweb.WebTests.test_search_filters_and_member_isolation) ... ok
+test_signup_hash_duplicate_csrf_and_login (testweb.WebTests.test_signup_hash_duplicate_csrf_and_login) ... ok
+test_signup_validation_utf8_limit_and_legacy_password (testweb.WebTests.test_signup_validation_utf8_limit_and_legacy_password) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 7.833s
+
+OK
+
+```
+
+base 556020d와 head e80c238의 실제 PR 변경을 검토하고 같은 head에서 재현 명령을 실행했습니다. PR 코드와 제목/본문, 병합 상태는 이 작업에서 변경하지 않았습니다.
