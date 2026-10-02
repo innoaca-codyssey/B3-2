@@ -279,7 +279,7 @@ commit/pr에 --convention JSON 경로를 추가했습니다. convention-example.
 python3 main.py pr --diff-base main --safe-mode --convention convention-example.json
 ```
 
-실제 컨벤션 적용 전후 생성과 PR 초안 생성은 코드 전송 승인을 기다리고 있어 아직 완료하지 않았습니다.
+실제 컨벤션 적용 전후 생성과 커밋/PR 초안의 모델 호출은 아직 수행하지 않았습니다.
 
 ## 컨벤션과 브랜치 비교 검증
 
@@ -310,3 +310,9 @@ OK
 ```
 
 컨벤션을 생략한 기존 호출의 동작, PR 필수 섹션, 잘못된 설정의 거절, 두 번 이내 재생성 및 커밋된 브랜치의 이름 변경/미추적 파일 비교까지 17개 검사가 통과했습니다.
+
+## 실제 저장소 적용
+
+이전에 완성한 B6-3에서 feature/bonus-auth-search 브랜치로 bcrypt 회원가입과 회원별 검색을 구현했습니다. 실제 HTTP 검사 11개를 통과한 커밋 e80c238을 push하고 [PR 1](https://github.com/innoaca-codyssey/B6-3/pull/1)을 작성했습니다. 현재 PR은 직접 작성한 제목/본문이며 모델의 커밋 메시지와 PR 초안 생성, 컨벤션 적용 전후 비교 및 초안에서 최종 PR까지의 5~10줄 비교는 미수행입니다. 따라서 실제 PR 링크만으로 B3-2의 해당 보너스를 전체 완료로 표시하지 않습니다.
+
+B6-3 제출 저장소의 브랜치에서 --diff-base main으로 커밋된 변경을 수집할 수 있습니다. 커밋 메시지/PR 초안은 검토용 출력이며 도구가 GitHub에 자동 반영하지 않습니다.
