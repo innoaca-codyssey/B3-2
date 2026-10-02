@@ -268,3 +268,45 @@ temperature를 낮추면 표현의 변동을 줄이는 방향이고 높이면 �
 ```bash
 python3 -m unittest discover -s tests -v
 ```
+
+## 보너스: JSON 컨벤션 설정
+
+commit/pr에 --convention JSON 경로를 추가했습니다. convention-example.json은 이전 B6-3의 feat/fix/docs: 한국어 커밋 스타일을 토대로 정의합니다. 기존 PR 스타일 표본이 없어 [B6-3] 제목과 간결한 톤은 이번 PR의 새 규칙으로 정합니다. commit_prefixes, 커밋 제목 10~72자, PR 제목 10~80자, PR 접두어, concise/formal 톤을 설정할 수 있습니다. Why/What/How to Test 섹션은 필수 명세대로 유지합니다. 잘못된 필드/타입/길이는 API 요청 전에 거절하고 prefix 형식 오류의 재생성도 총 2회로 제한합니다.
+
+--diff-base main을 지정하면 이미 커밋한 브랜치의 작업 트리를 main과 비교합니다. Git status와 Git diff 범위에서 수집하며 커밋/push/PR을 자동 반영하지 않습니다. 기본 명령은 기존처럼 인덱스와 작업 트리의 변경만 수집합니다. untracked는 두 방식 모두 포함하며 민감 경로 제외와 마스킹은 동일하게 적용합니다.
+
+```bash
+python3 main.py pr --diff-base main --safe-mode --convention convention-example.json
+```
+
+실제 컨벤션 적용 전후 생성과 PR 초안 생성은 코드 전송 승인을 기다리고 있어 아직 완료하지 않았습니다.
+
+## 컨벤션과 브랜치 비교 검증
+
+```bash
+$ python3 -m unittest discover -s tests -v
+test_committed_changes_rename_and_untracked (testbase.BaseDiffTests.test_committed_changes_rename_and_untracked) ... ok
+test_invalid_ref_is_not_a_git_option (testbase.BaseDiffTests.test_invalid_ref_is_not_a_git_option) ... ok
+test_bad_configuration_before_network (testconvention.ConventionTests.test_bad_configuration_before_network) ... ok
+test_convention_repair_is_bounded (testconvention.ConventionTests.test_convention_repair_is_bounded) ... ok
+test_output_constraints_and_default_compatibility (testconvention.ConventionTests.test_output_constraints_and_default_compatibility) ... ok
+test_http_failure_invalid_response_and_redirect (testdrafts.FormatTests.test_http_failure_invalid_response_and_redirect) ... ok
+test_invalid_json_missing_section_and_empty_bullet (testdrafts.FormatTests.test_invalid_json_missing_section_and_empty_bullet) ... ok
+test_regeneration_once_and_no_third_call (testdrafts.FormatTests.test_regeneration_once_and_no_third_call) ... ok
+test_title_cap_and_fenced_json (testdrafts.FormatTests.test_title_cap_and_fenced_json) ... ok
+test_clean_missing_key_and_root_requirement (testdrafts.GitTests.test_clean_missing_key_and_root_requirement) ... ok
+test_cli_argument_errors_no_traceback (testdrafts.GitTests.test_cli_argument_errors_no_traceback) ... ok
+test_cli_parameters_and_pr_structure (testdrafts.GitTests.test_cli_parameters_and_pr_structure) ... ok
+test_rename_and_unicode_path (testdrafts.GitTests.test_rename_and_unicode_path) ... ok
+test_safe_mode_excludes_before_reading_and_limits_lines (testdrafts.GitTests.test_safe_mode_excludes_before_reading_and_limits_lines) ... ok
+test_safe_mode_file_limit (testdrafts.GitTests.test_safe_mode_file_limit) ... ok
+test_staged_unstaged_and_untracked_content (testdrafts.GitTests.test_staged_unstaged_and_untracked_content) ... ok
+test_tokens_email_assignments_and_partial_private_key (testdrafts.PrivacyTests.test_tokens_email_assignments_and_partial_private_key) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 5.690s
+
+OK
+```
+
+컨벤션을 생략한 기존 호출의 동작, PR 필수 섹션, 잘못된 설정의 거절, 두 번 이내 재생성 및 커밋된 브랜치의 이름 변경/미추적 파일 비교까지 17개 검사가 통과했습니다.

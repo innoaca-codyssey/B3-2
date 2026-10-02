@@ -3,6 +3,7 @@ import math
 import os
 from pathlib import Path
 from changes import GitChanges
+from convention import load
 from client import APIError, ChatClient
 from drafts import FormatError, generate, prompt
 from privacy import prepare, redact
@@ -43,6 +44,8 @@ def parser() -> argparse.ArgumentParser:
         p.add_argument('--max-files', type=positive, default=10)
         p.add_argument('--max-lines', type=positive, default=200)
         p.add_argument('--context', default='추가 배경 없음')
+        p.add_argument('--convention', help='JSON 컨벤션 설정 파일')
+        p.add_argument('--diff-base', help='브랜치의 커밋된 변경까지 비교할 기준 ref')
     return root
 
 
@@ -51,7 +54,8 @@ def main(argv=None) -> int:
     key = os.getenv('AI_API_KEY', '')
     client = None
     try:
-        repository = GitChanges(Path.cwd())
+        convention = load(args.convention) if args.convention else None
+        repository = GitChanges(Path.cwd(), args.diff_base)
         if not key.strip():
             raise ValueError('AI_API_KEY가 없습니다. 환경변수를 설정하세요')
         client = ChatClient(args.base_url, args.model, key, args.temperature, args.max_tokens, args.timeout)
@@ -60,7 +64,8 @@ def main(argv=None) -> int:
             print('[INFO] 변경 사항이 없습니다')
             print('[INFO] API 요청 횟수: 0')
             return 0
-        print(f'[INFO] Git status: {len(changes)}개 파일 변경')
+        label = 'Git comparison' if args.diff_base else 'Git status'
+        print(f'[INFO] {label}: {len(changes)}개 파일 변경')
         prepared = prepare(changes, repository.diff, args.safe_mode, args.max_files, args.max_lines, key)
         print(f'[INFO] 전송 파일: {len(prepared.files)}, 제외: {prepared.excluded}, 마스킹: {prepared.redactions}, 생략 행: {prepared.omitted_lines}')
         if not prepared.files:
@@ -69,7 +74,7 @@ def main(argv=None) -> int:
             return 0
         context = redact(args.context, key)[0] if args.safe_mode else args.context
         print(f'[INFO] model={args.model} temperature={args.temperature} max_tokens={args.max_tokens}')
-        draft, usage = generate(client, prompt(args.command, prepared, context), args.command)
+        draft, usage = generate(client, prompt(args.command, prepared, context, convention), args.command, convention)
         if draft.title_before != len(draft.title):
             print(f'[INFO] 제목 길이 조정: {draft.title_before} -> {len(draft.title)}')
         if args.command == 'commit' and len(draft.title) > 50:

@@ -1,0 +1,7 @@
+{
+  "commit_prefixes": ["feat", "fix", "docs", "refactor", "test", "chore"],
+  "commit_title_limit": 50,
+  "pr_title_limit": 64,
+  "pr_title_prefix": "[B6-3]",
+  "tone": "concise"
+}

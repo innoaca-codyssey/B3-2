@@ -46,7 +46,7 @@ class Draft:
         return output
 
 
-def parse(content: str, kind: str) -> Draft:
+def parse(content: str, kind: str, convention=None) -> Draft:
     content = content.strip()
     fence = re.fullmatch(r'```(?:json)?\s*([\s\S]*?)\s*```', content)
     if fence:
@@ -60,6 +60,13 @@ def parse(content: str, kind: str) -> Draft:
     title = line(data.get('title'))
     before = len(title)
     limit = 72 if kind == 'commit' else 80
+    if convention:
+        limit = convention.commit_title_limit if kind == 'commit' else convention.pr_title_limit
+        if kind == 'commit':
+            if title.split(':', 1)[0] not in convention.commit_prefixes or ':' not in title:
+                raise FormatError('커밋 prefix가 컨벤션에 맞지 않습니다')
+        elif convention.pr_title_prefix and not title.startswith(convention.pr_title_prefix + ' '):
+            title = convention.pr_title_prefix + ' ' + title
     title = title[:limit].rstrip()
     if kind == 'commit':
         sections = [('Body', bullets(data.get('body', []), required=False))]
@@ -68,7 +75,7 @@ def parse(content: str, kind: str) -> Draft:
     return Draft(title, sections, before)
 
 
-def prompt(kind: str, prepared: Prepared, context: str) -> list[dict]:
+def prompt(kind: str, prepared: Prepared, context: str, convention=None) -> list[dict]:
     schema = '{"title":"50자 이내 제목 권장, 최대 72자","body":["변경 파일이나 핵심 변경 불릿"]}' if kind == 'commit' else '{"title":"최대 80자 PR 제목","why":["변경 배경"],"what":["핵심 변경"],"tests":["실행할 검사"]}'
     system = (
         '한국어로 Git 변경 초안을 작성합니다. 설명이나 Markdown 코드펜스 없이 JSON 객체만 출력하세요. '
@@ -79,17 +86,19 @@ def prompt(kind: str, prepared: Prepared, context: str) -> list[dict]:
         '가운뎃점, 특수 대시, 도구 이름이나 생성 서명을 넣지 마세요. '
         '요청 JSON 형식: ' + schema
     )
+    if convention:
+        system += ' 컨벤션: ' + json.dumps(convention.rules(), ensure_ascii=False) + ' . concise는 간결한 한국어, formal은 격식 있는 한국어로 작성하세요. PR 섹션은 Why/What/How to Test를 유지하세요.'
     return [{'role': 'system', 'content': system}, {'role': 'user', 'content': json.dumps({'command': kind, 'context': context, 'files': prepared.files}, ensure_ascii=False)}]
 
 
-def generate(client: ChatClient, messages: list[dict], kind: str) -> tuple[Draft, dict]:
+def generate(client: ChatClient, messages: list[dict], kind: str, convention=None) -> tuple[Draft, dict]:
     """형식 오류만 한 번 재생성하며 요청 수는 최대 두 번입니다."""
     for attempt in range(2):
         completion = client.complete(messages)
         try:
             if completion.finish_reason == 'length':
                 raise FormatError('최대 토큰 수에 도달해 출력이 잘렸습니다')
-            return parse(completion.text, kind), completion.usage
+            return parse(completion.text, kind, convention), completion.usage
         except FormatError as error:
             if attempt == 1:
                 raise FormatError('형식 검증 실패: ' + str(error) + '. --max-tokens와 입력 변경량을 확인하세요') from error
